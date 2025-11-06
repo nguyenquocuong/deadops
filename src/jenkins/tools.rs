@@ -61,7 +61,7 @@ pub struct SearchJobError(String);
 Search job from Jenkins Server
 ")]
 pub async fn search_job(job_name: String) -> Result<String> {
-    println!("[{}] Searching job \"search_job\"...", job_name);
+    println!("[search_job] Searching job \"{}\"...", job_name);
 
     #[derive(Debug, Clone, Deserialize)]
     struct Job {
@@ -107,7 +107,7 @@ pub async fn search_job(job_name: String) -> Result<String> {
 Build job from Jenkins Server
 ")]
 pub async fn build_job(job_name: String) -> Result<bool> {
-    println!("[{}] Building job \"build_job\"...", job_name);
+    println!("[build_job] Building job \"{}\"...", job_name);
 
     let client = reqwest::Client::new();
 
