@@ -19,3 +19,4 @@ uuid = { version = "1.18.1", features = ["v4"] }
 url = "2.5.0"
 rig-core = "0.23.1"
 thiserror = "2.0.17"
+rig-tool-macro = "0.5.0"
