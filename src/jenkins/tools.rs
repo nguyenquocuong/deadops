@@ -1,10 +1,9 @@
-use anyhow::Result;
 use rig::{
     agent::Agent,
     completion::{CompletionModel, Prompt, ToolDefinition},
-    tool::Tool,
+    tool::{Tool, ToolError},
+    tool_macro,
 };
-use rig_tool_macro::tool;
 use serde::Deserialize;
 use serde_json::json;
 
@@ -53,14 +52,12 @@ impl<M: CompletionModel> Tool for JenkinsTool<M> {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-#[error("SearchJob error: {0}")]
-pub struct SearchJobError(String);
-
-#[tool(description = "
-Search job from Jenkins Server
-")]
-pub async fn search_job(job_name: String) -> Result<String> {
+#[tool_macro(
+    description = "Search job from Jenkins Server",
+    params(job_name = "Job name"),
+    required(job_name)
+)]
+pub async fn search_job(job_name: String) -> Result<String, ToolError> {
     println!("[search_job] Searching job \"{}\"...", job_name);
 
     #[derive(Debug, Clone, Deserialize)]
@@ -82,10 +79,10 @@ pub async fn search_job(job_name: String) -> Result<String> {
         .basic_auth("admin", Some("110ae742f68ae5a9d557281f932906a9a1"))
         .send()
         .await
-        .expect("Request failed")
+        .or(Err(ToolError::ToolCallError("Request failed".into())))?
         .json::<Response>()
         .await
-        .expect("Parse json failed");
+        .or(Err(ToolError::ToolCallError("Parse json failed".into())))?;
 
     let match_jobs: Vec<Job> = res
         .jobs
@@ -96,17 +93,15 @@ pub async fn search_job(job_name: String) -> Result<String> {
 
     let first_job = match_jobs
         .first()
-        .ok_or(SearchJobError("Job not found".to_string()))?;
+        .ok_or(ToolError::ToolCallError("Job not found".into()))?;
 
     println!("Found job \"{}\"", first_job.name);
 
     Ok(first_job.name.clone())
 }
 
-#[tool(description = "
-Build job from Jenkins Server
-")]
-pub async fn build_job(job_name: String) -> Result<bool> {
+#[tool_macro(description = "Build job from Jenkins Server")]
+pub async fn build_job(job_name: String) -> Result<bool, ToolError> {
     println!("[build_job] Building job \"{}\"...", job_name);
 
     let client = reqwest::Client::new();
@@ -116,11 +111,11 @@ pub async fn build_job(job_name: String) -> Result<bool> {
         .basic_auth("admin", Some("110ae742f68ae5a9d557281f932906a9a1"))
         .send()
         .await
-        .expect("Request failed")
+        .or(Err(ToolError::ToolCallError("Request failed".into())))?
         // .json::<Response>()
         .text()
         .await
-        .expect("Parse json failed");
+        .or(Err(ToolError::ToolCallError("Parse json failed".into())))?;
 
     Ok(true)
 }

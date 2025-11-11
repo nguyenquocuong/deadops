@@ -15,15 +15,7 @@ mod jenkins;
 async fn main() -> Result<(), anyhow::Error> {
     tracing_subscriber::fmt().init();
 
-    let jenkins_agent = create_jenkins_agent(Some(
-        "You are an assistant here to help the user perform Jenkins tasks.
-        Follow these instructions closely:
-        1. Use the search_job tool to search for the job name.
-        2. Use the build_job tool to build the job with the found job name.
-        "
-        .to_string(),
-    ))
-    .await?;
+    let jenkins_agent = create_jenkins_agent(None).await?;
 
     let jenkins_tool = JenkinsTool(jenkins_agent);
 
